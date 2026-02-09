@@ -1,9 +1,14 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import ReactECharts from "echarts-for-react";
+import dynamic from 'next/dynamic';
 import { Card, Row, Col, Statistic, Spin, List, Typography } from "antd";
 import { FundLog } from "@/lib/types";
 import dayjs from "dayjs";
+
+const ReactECharts = dynamic(() => import('echarts-for-react'), { 
+  ssr: false,
+  loading: () => <Spin />
+});
 
 const { Text } = Typography;
 

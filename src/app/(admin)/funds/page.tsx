@@ -4,7 +4,6 @@ import { Table, Button, Modal, Form, InputNumber, message, Space, Upload, Popcon
 import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined, DownloadOutlined, FileExcelOutlined } from '@ant-design/icons';
 import { Fund } from '@/lib/types';
 import type { RcFile } from 'antd/es/upload/interface';
-import * as XLSX from 'xlsx';
 
 export default function FundsPage() {
   const [funds, setFunds] = useState<Fund[]>([]);
@@ -102,11 +101,12 @@ export default function FundsPage() {
     }
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (funds.length === 0) {
       message.warning('暂无数据可导出');
       return;
     }
+    const XLSX = await import('xlsx');
     // Convert to simple object with Chinese keys
     const dataToExport = funds.map(f => ({
       '基金名称': f.name,
@@ -120,7 +120,8 @@ export default function FundsPage() {
     XLSX.writeFile(wb, "funds.xlsx");
   };
 
-  const handleDownloadTemplate = () => {
+  const handleDownloadTemplate = async () => {
+    const XLSX = await import('xlsx');
     const templateData = [
       { '基金名称': '示例基金A', '金额': 10000 },
       { '基金名称': '示例基金B', '金额': 5000 }
@@ -138,6 +139,7 @@ export default function FundsPage() {
       if (!data) return;
 
       try {
+        const XLSX = await import('xlsx');
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
