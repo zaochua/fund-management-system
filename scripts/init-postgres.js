@@ -58,9 +58,17 @@ async function initDb() {
       CREATE TABLE IF NOT EXISTS fund_names (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL UNIQUE,
+        sector VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    
+    // Add sector column if it doesn't exist (for migration)
+    try {
+      await client.query(`ALTER TABLE fund_names ADD COLUMN IF NOT EXISTS sector VARCHAR(255)`);
+    } catch (e) {
+      console.log('Column sector might already exist or error adding it:', e.message);
+    }
 
     console.log('Creating fund_logs table...');
     await client.query(`
