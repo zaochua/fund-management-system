@@ -8,9 +8,16 @@ dotenv.config({ path: path.resolve(__dirname, '../.env.development.local') });
 dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
+// Fallback for Vercel's newer local env behavior which might only download .env.local
+// but not include POSTGRES_URL if not explicitly pulled or if using a different command
+if (!process.env.POSTGRES_URL && !process.env.DATABASE_URL) {
+  console.warn('⚠️ POSTGRES_URL or DATABASE_URL not found in environment variables.');
+  console.warn('Please ensure you have run "vercel env pull .env.development.local" to get your database credentials.');
+}
+
 async function initDb() {
   const pool = createPool({
-    connectionString: process.env.POSTGRES_URL,
+    connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
   });
 
   try {
