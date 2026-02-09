@@ -20,6 +20,7 @@ export interface Fund extends QueryResultRow {
 export interface FundName extends QueryResultRow {
   id: number;
   name: string;
+  sector?: string;
   created_at: Date;
 }
 

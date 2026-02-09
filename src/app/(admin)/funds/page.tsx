@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Form, InputNumber, message, Space, Upload, Popconfirm, AutoComplete } from 'antd';
+import { Table, Button, Modal, Form, InputNumber, message, Space, Upload, Popconfirm, Select } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined, DownloadOutlined, FileExcelOutlined } from '@ant-design/icons';
 import { Fund } from '@/lib/types';
 import type { RcFile } from 'antd/es/upload/interface';
@@ -13,8 +13,11 @@ export default function FundsPage() {
   const [editingFund, setEditingFund] = useState<Fund | null>(null);
   const [form] = Form.useForm();
   
-  // Options for AutoComplete
-  const [fundNameOptions, setFundNameOptions] = useState<{ value: string }[]>([]);
+  // Data for cascading selection
+  const [sectorOptions, setSectorOptions] = useState<{ value: string; label: string }[]>([]);
+  const [fundNameData, setFundNameData] = useState<{ name: string; sector: string }[]>([]);
+  const [filteredFundNames, setFilteredFundNames] = useState<{ value: string; label: string }[]>([]);
+  const [selectedSector, setSelectedSector] = useState<string | null>(null);
 
   const fetchFunds = async () => {
     setLoading(true);
@@ -37,8 +40,12 @@ export default function FundsPage() {
     try {
       const res = await fetch('/api/fund-names');
       if (res.ok) {
-        const data = await res.json();
-        setFundNameOptions(data.map((item: { name: string }) => ({ value: item.name })));
+        const data: { name: string; sector: string }[] = await res.json();
+        setFundNameData(data);
+        
+        // Extract unique sectors
+        const sectors = Array.from(new Set(data.map(item => item.sector || '未分类'))).filter(Boolean);
+        setSectorOptions(sectors.map(s => ({ value: s, label: s })));
       }
     } catch (error) {
       console.error('Failed to fetch fund names');
@@ -50,8 +57,22 @@ export default function FundsPage() {
     fetchFundNames();
   }, []);
 
+  // Handle sector change
+  const handleSectorChange = (sector: string) => {
+    setSelectedSector(sector);
+    form.setFieldsValue({ name: undefined }); // Reset fund name selection
+    
+    // Filter fund names based on sector
+    const filtered = fundNameData
+      .filter(item => (item.sector || '未分类') === sector)
+      .map(item => ({ value: item.name, label: item.name }));
+    setFilteredFundNames(filtered);
+  };
+
   const handleAdd = () => {
     setEditingFund(null);
+    setSelectedSector(null);
+    setFilteredFundNames([]);
     form.resetFields();
     setIsModalOpen(true);
   };
@@ -59,6 +80,33 @@ export default function FundsPage() {
   const handleEdit = (record: Fund) => {
     setEditingFund(record);
     form.setFieldsValue(record);
+    
+    // Find the sector for this fund name to pre-fill the form
+    const fundInfo = fundNameData.find(f => f.name === record.name);
+    if (fundInfo && fundInfo.sector) {
+      setSelectedSector(fundInfo.sector);
+      form.setFieldsValue({ sector: fundInfo.sector });
+      
+      // Update filtered list
+      const filtered = fundNameData
+        .filter(item => item.sector === fundInfo.sector)
+        .map(item => ({ value: item.name, label: item.name }));
+      setFilteredFundNames(filtered);
+    } else {
+        // If not found or no sector, maybe allow selecting from all or handle gracefully
+        // For now, let's just default to showing nothing or all? 
+        // Or if it's editing, maybe we don't force sector selection if it's already saved?
+        // But the requirement says "select sector then fund".
+        // Let's try to set 'Other' if unknown.
+        const sector = '未分类';
+        setSelectedSector(sector);
+        form.setFieldsValue({ sector });
+         const filtered = fundNameData
+        .filter(item => (item.sector || '未分类') === sector)
+        .map(item => ({ value: item.name, label: item.name }));
+         setFilteredFundNames(filtered);
+    }
+    
     setIsModalOpen(true);
   };
 
@@ -243,15 +291,29 @@ export default function FundsPage() {
       >
         <Form form={form} layout="vertical">
           <Form.Item
+            name="sector"
+            label="所属板块"
+            rules={[{ required: true, message: '请选择所属板块' }]}
+          >
+            <Select
+              placeholder="请选择所属板块"
+              options={sectorOptions}
+              onChange={handleSectorChange}
+            />
+          </Form.Item>
+
+          <Form.Item
             name="name"
             label="基金名称"
-            rules={[{ required: true, message: '请输入或选择基金名称!' }]}
+            rules={[{ required: true, message: '请选择基金名称' }]}
           >
-            <AutoComplete
-              options={fundNameOptions}
-              placeholder="请输入或选择基金名称"
-              filterOption={(inputValue, option) =>
-                option!.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+            <Select
+              placeholder="请选择基金名称"
+              options={filteredFundNames}
+              disabled={!selectedSector}
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
               }
             />
           </Form.Item>

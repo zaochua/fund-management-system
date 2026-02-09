@@ -14,10 +14,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { name } = await request.json();
+    const { name, sector } = await request.json();
 
-    if (!name) {
-      return NextResponse.json({ message: '基金名称不能为空' }, { status: 400 });
+    if (!name || !sector) {
+      return NextResponse.json({ message: '基金名称和所属板块不能为空' }, { status: 400 });
     }
 
     // Check if exists
@@ -26,9 +26,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: '该基金名称已存在' }, { status: 409 });
     }
 
-    const result = await sql.sql`INSERT INTO fund_names (name) VALUES (${name}) RETURNING id`;
+    const result = await sql.sql`INSERT INTO fund_names (name, sector) VALUES (${name}, ${sector}) RETURNING id`;
     
-    return NextResponse.json({ id: result.rows[0].id, name }, { status: 201 });
+    return NextResponse.json({ id: result.rows[0].id, name, sector }, { status: 201 });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ message: '添加基金名称失败', error: errorMessage }, { status: 500 });

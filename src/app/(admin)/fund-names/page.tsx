@@ -1,9 +1,15 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, message, Space, Popconfirm } from 'antd';
+import { Table, Button, Modal, Form, Input, message, Space, Popconfirm, Select } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { FundName } from '@/lib/types';
 import dayjs from 'dayjs';
+
+const SECTOR_OPTIONS = [
+  { label: '有色金属', value: '有色金属' },
+  { label: '贵金属', value: '贵金属' },
+  { label: '新质生产力', value: '新质生产力' },
+];
 
 export default function FundNamesPage() {
   const [data, setData] = useState<FundName[]>([]);
@@ -33,7 +39,7 @@ export default function FundNamesPage() {
     fetchData();
   }, [fetchData]);
 
-  const handleSave = async (values: { name: string }) => {
+  const handleSave = async (values: { name: string; sector: string }) => {
     try {
       const method = editingItem ? 'PUT' : 'POST';
       const url = editingItem ? `/api/fund-names/${editingItem.id}` : '/api/fund-names';
@@ -61,7 +67,7 @@ export default function FundNamesPage() {
 
   const handleEdit = (record: FundName) => {
     setEditingItem(record);
-    form.setFieldsValue({ name: record.name });
+    form.setFieldsValue({ name: record.name, sector: record.sector });
     setIsModalOpen(true);
   };
 
@@ -96,6 +102,11 @@ export default function FundNamesPage() {
       title: '基金名称',
       dataIndex: 'name',
       key: 'name',
+    },
+    {
+      title: '所属板块',
+      dataIndex: 'sector',
+      key: 'sector',
     },
     {
       title: '创建时间',
@@ -140,6 +151,16 @@ export default function FundNamesPage() {
         onCancel={() => setIsModalOpen(false)}
       >
         <Form form={form} onFinish={handleSave} layout="vertical">
+          <Form.Item
+            name="sector"
+            label="所属板块"
+            rules={[{ required: true, message: '请选择所属板块' }]}
+          >
+            <Select
+              placeholder="请选择所属板块"
+              options={SECTOR_OPTIONS}
+            />
+          </Form.Item>
           <Form.Item
             name="name"
             label="基金名称"

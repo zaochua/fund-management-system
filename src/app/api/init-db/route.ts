@@ -30,9 +30,18 @@ export async function GET() {
       CREATE TABLE IF NOT EXISTS fund_names (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL UNIQUE,
+        sector VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `;
+    
+    // Add sector column if it doesn't exist (for migration)
+    try {
+      await db.sql`ALTER TABLE fund_names ADD COLUMN IF NOT EXISTS sector VARCHAR(255)`;
+    } catch (e) {
+      // Ignore if column already exists or other non-critical errors
+      console.log('Column sector might already exist or error adding it:', e);
+    }
 
     await db.sql`
       CREATE TABLE IF NOT EXISTS fund_logs (
