@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import sql from '@/lib/db';
 import { verifyAuth } from '@/lib/auth';
-import { Fund, DbQueryResult, DbExecuteResult } from '@/lib/types';
+import { Fund } from '@/lib/types';
 
 export async function GET(request: Request) {
   const user = await verifyAuth(request);
@@ -11,7 +11,9 @@ export async function GET(request: Request) {
   }
 
   try {
-    const [rows] = await pool.query<DbQueryResult<Fund>>('SELECT * FROM funds WHERE user_id = ? ORDER BY created_at DESC', [user.userId]);
+    const { rows } = await sql<Fund>`
+      SELECT * FROM funds WHERE user_id = ${user.userId} ORDER BY created_at DESC
+    `;
     return NextResponse.json(rows);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : '未知错误';
@@ -32,12 +34,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: '基金名称和金额不能为空' }, { status: 400 });
     }
 
-    const [result] = await pool.query<DbExecuteResult>(
-      'INSERT INTO funds (name, amount, user_id) VALUES (?, ?, ?)',
-      [name, amount, user.userId]
-    );
+    const result = await sql`
+      INSERT INTO funds (name, amount, user_id) VALUES (${name}, ${amount}, ${user.userId})
+      RETURNING id
+    `;
 
-    return NextResponse.json({ id: result.insertId, name, amount, user_id: user.userId }, { status: 201 });
+    return NextResponse.json({ id: result.rows[0].id, name, amount, user_id: user.userId }, { status: 201 });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : '未知错误';
     return NextResponse.json({ message: '创建基金失败', error: errorMessage }, { status: 500 });

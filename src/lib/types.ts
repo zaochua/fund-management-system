@@ -1,6 +1,6 @@
-import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { QueryResultRow } from '@vercel/postgres';
 
-export interface User extends RowDataPacket {
+export interface User extends QueryResultRow {
   id: number;
   username: string;
   password?: string;
@@ -8,22 +8,22 @@ export interface User extends RowDataPacket {
   created_at: Date;
 }
 
-export interface Fund extends RowDataPacket {
+export interface Fund extends QueryResultRow {
   id: number;
   name: string;
-  amount: number | string; // MySQL DECIMAL returns string sometimes, or number depending on driver settings
+  amount: number | string;
   user_id: number;
   created_at: Date;
   updated_at: Date;
 }
 
-export interface FundName extends RowDataPacket {
+export interface FundName extends QueryResultRow {
   id: number;
   name: string;
   created_at: Date;
 }
 
-export interface FundLog extends RowDataPacket {
+export interface FundLog extends QueryResultRow {
   id: number;
   content: string;
   user_id: number;
@@ -42,5 +42,12 @@ export interface JWTPayload {
   [key: string]: unknown;
 }
 
-export type DbQueryResult<T> = T[] & RowDataPacket[];
-export type DbExecuteResult = ResultSetHeader;
+// Helper types for migration compatibility
+// In Vercel Postgres (pg), query returns { rows: T[], rowCount: number, ... }
+export type DbQueryResult<T> = T[];
+
+// For insert/update/delete results
+export interface DbExecuteResult {
+  rowCount: number;
+  rows: any[];
+}

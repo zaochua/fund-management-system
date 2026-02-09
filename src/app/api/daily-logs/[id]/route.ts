@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import sql from '@/lib/db';
 import { verifyAuth } from '@/lib/auth';
-import { DbExecuteResult } from '@/lib/types';
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -18,12 +17,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     // Ensure the log belongs to the user
-    const [result] = await pool.query<DbExecuteResult>(
-      'UPDATE fund_logs SET content = ?, log_date = ? WHERE id = ? AND user_id = ?',
-      [content, date, id, auth.userId]
-    );
+    const result = await sql`
+      UPDATE fund_logs SET content = ${content}, log_date = ${date} WHERE id = ${id} AND user_id = ${auth.userId}
+    `;
 
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return NextResponse.json({ message: '记录不存在或无权修改' }, { status: 404 });
     }
 
@@ -44,12 +42,11 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     const id = parseInt(params.id);
     
     // Ensure the log belongs to the user
-    const [result] = await pool.query<DbExecuteResult>(
-      'DELETE FROM fund_logs WHERE id = ? AND user_id = ?',
-      [id, auth.userId]
-    );
+    const result = await sql`
+      DELETE FROM fund_logs WHERE id = ${id} AND user_id = ${auth.userId}
+    `;
 
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return NextResponse.json({ message: '记录不存在或无权删除' }, { status: 404 });
     }
 

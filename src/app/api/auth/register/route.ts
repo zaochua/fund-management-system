@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import sql from '@/lib/db';
 import bcrypt from 'bcryptjs';
-import { DbExecuteResult } from '@/lib/types';
 
 export async function POST(request: Request) {
   try {
@@ -13,14 +12,15 @@ export async function POST(request: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const [result] = await pool.query<DbExecuteResult>(
-      'INSERT INTO users (username, password) VALUES (?, ?)',
-      [username, hashedPassword]
-    );
+    const result = await sql`
+      INSERT INTO users (username, password) VALUES (${username}, ${hashedPassword})
+      RETURNING id
+    `;
 
-    return NextResponse.json({ message: '用户注册成功', userId: result.insertId }, { status: 201 });
+    return NextResponse.json({ message: '用户注册成功', userId: result.rows[0].id }, { status: 201 });
   } catch (error: unknown) {
-    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'ER_DUP_ENTRY') {
+    // Postgres unique violation code is 23505
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === '23505') {
       return NextResponse.json({ message: '用户名已存在' }, { status: 409 });
     }
     const errorMessage = error instanceof Error ? error.message : '未知错误';

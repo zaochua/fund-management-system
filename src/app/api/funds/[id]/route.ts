@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import sql from '@/lib/db';
 import { verifyAuth } from '@/lib/auth';
-import { DbExecuteResult } from '@/lib/types';
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   const user = await verifyAuth(request);
@@ -14,12 +13,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const { name, amount } = await request.json();
     const { id } = params;
 
-    const [result] = await pool.query<DbExecuteResult>(
-      'UPDATE funds SET name = ?, amount = ? WHERE id = ? AND user_id = ?',
-      [name, amount, id, user.userId]
-    );
+    const result = await sql`
+      UPDATE funds SET name = ${name}, amount = ${amount} WHERE id = ${id} AND user_id = ${user.userId}
+    `;
 
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return NextResponse.json({ message: '基金不存在或无权操作' }, { status: 404 });
     }
 
@@ -40,12 +38,11 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
   try {
     const { id } = params;
 
-    const [result] = await pool.query<DbExecuteResult>(
-      'DELETE FROM funds WHERE id = ? AND user_id = ?',
-      [id, user.userId]
-    );
+    const result = await sql`
+      DELETE FROM funds WHERE id = ${id} AND user_id = ${user.userId}
+    `;
 
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return NextResponse.json({ message: '基金不存在或无权操作' }, { status: 404 });
     }
 

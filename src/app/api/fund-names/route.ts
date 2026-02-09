@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
-import { FundName, DbQueryResult, DbExecuteResult } from '@/lib/types';
+import sql from '@/lib/db';
+import { FundName } from '@/lib/types';
 
 export async function GET() {
   try {
-    const [rows] = await pool.query<DbQueryResult<FundName>>('SELECT * FROM fund_names ORDER BY created_at DESC');
+    const { rows } = await sql<FundName>`SELECT * FROM fund_names ORDER BY created_at DESC`;
     return NextResponse.json(rows);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -21,14 +21,14 @@ export async function POST(request: Request) {
     }
 
     // Check if exists
-    const [existing] = await pool.query<DbQueryResult<FundName>>('SELECT * FROM fund_names WHERE name = ?', [name]);
+    const { rows: existing } = await sql<FundName>`SELECT * FROM fund_names WHERE name = ${name}`;
     if (existing.length > 0) {
       return NextResponse.json({ message: '该基金名称已存在' }, { status: 409 });
     }
 
-    const [result] = await pool.query<DbExecuteResult>('INSERT INTO fund_names (name) VALUES (?)', [name]);
+    const result = await sql`INSERT INTO fund_names (name) VALUES (${name}) RETURNING id`;
     
-    return NextResponse.json({ id: result.insertId, name }, { status: 201 });
+    return NextResponse.json({ id: result.rows[0].id, name }, { status: 201 });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ message: '添加基金名称失败', error: errorMessage }, { status: 500 });

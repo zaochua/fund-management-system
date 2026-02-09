@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import sql from '@/lib/db';
 import { verifyAuth } from '@/lib/auth';
-import { Fund, DbQueryResult } from '@/lib/types';
+import { Fund } from '@/lib/types';
 
 export async function GET(request: Request) {
   const user = await verifyAuth(request);
@@ -11,10 +11,9 @@ export async function GET(request: Request) {
   }
 
   try {
-    const [rows] = await pool.query<DbQueryResult<Fund>>(
-      'SELECT name, amount FROM funds WHERE user_id = ?', 
-      [user.userId]
-    );
+    const { rows } = await sql<Fund>`
+      SELECT name, amount FROM funds WHERE user_id = ${user.userId}
+    `;
 
     const totalAmount = rows.reduce((acc: number, curr: Fund) => acc + parseFloat(curr.amount as string), 0);
     
