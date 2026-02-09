@@ -17,7 +17,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     // Ensure the log belongs to the user
-    const result = await sql`
+    const result = await sql.sql`
       UPDATE fund_logs SET content = ${content}, log_date = ${date} WHERE id = ${id} AND user_id = ${auth.userId}
     `;
 

@@ -25,7 +25,7 @@ if (process.env.NODE_ENV === 'production') {
 
 // Shim to support the tagged template literal syntax used in the app
 // e.g. db.sql`SELECT * FROM users`
-async function sql(strings: TemplateStringsArray, ...values: any[]) {
+async function sql<T extends import('pg').QueryResultRow = any>(strings: TemplateStringsArray, ...values: any[]) {
   // Construct the query string with $1, $2, etc.
   let text = strings[0];
   for (let i = 1; i < strings.length; i++) {
@@ -33,7 +33,7 @@ async function sql(strings: TemplateStringsArray, ...values: any[]) {
   }
   
   // Execute the query
-  return pool.query(text, values);
+  return pool.query<T>(text, values);
 }
 
 const db = {
