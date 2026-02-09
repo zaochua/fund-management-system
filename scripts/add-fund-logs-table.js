@@ -1,11 +1,5 @@
-import mysql from 'mysql2/promise';
-
-const dbConfig = {
-  host: 'localhost',
-  user: 'root',
-  password: '123456',
-  database: 'fund_db'
-};
+const mysql = require('mysql2/promise');
+const dbConfig = require('./db-config.js');
 
 async function addFundLogsTable() {
   let connection;

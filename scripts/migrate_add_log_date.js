@@ -1,13 +1,9 @@
 
-import mysql from 'mysql2/promise';
+const mysql = require('mysql2/promise');
+const dbConfig = require('./db-config.js');
 
 async function migrate() {
-  const connection = await mysql.createConnection({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '123456',
-    database: process.env.DB_NAME || 'fund_db',
-  });
+  const connection = await mysql.createConnection(dbConfig);
 
   try {
     console.log('Checking fund_logs table...');

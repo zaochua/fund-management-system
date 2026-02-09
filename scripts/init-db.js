@@ -1,23 +1,23 @@
-import mysql from 'mysql2/promise';
-
-const dbConfig = {
-  host: 'localhost',
-  user: 'root',
-  password: '123456',
-};
+const mysql = require('mysql2/promise');
+const dbConfig = require('./db-config.js');
 
 async function initDb() {
   let connection;
   try {
-    connection = await mysql.createConnection(dbConfig);
+    // Connect without database selected to create it if needed
+    connection = await mysql.createConnection({
+      host: dbConfig.host,
+      user: dbConfig.user,
+      password: dbConfig.password,
+    });
     console.log('Connected to MySQL server');
 
     // Create database
-    await connection.query('CREATE DATABASE IF NOT EXISTS fund_db');
-    console.log('Database fund_db created or already exists');
+    await connection.query(`CREATE DATABASE IF NOT EXISTS ${dbConfig.database}`);
+    console.log(`Database ${dbConfig.database} created or already exists`);
 
     // Use database
-    await connection.changeUser({ database: 'fund_db' });
+    await connection.changeUser({ database: dbConfig.database });
 
     // Create users table
     const createUsersTable = `
