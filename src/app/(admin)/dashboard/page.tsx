@@ -55,17 +55,13 @@ export default function Dashboard() {
   const chartData = data?.chartData || [];
 
   const option = {
-    title: {
-      text: "基金持仓占比",
-      left: "center",
-    },
     tooltip: {
       trigger: "item",
       formatter: "{b}: ${c} ({d}%)",
     },
     legend: {
-      orient: "vertical",
-      left: "left",
+      orient: "horizontal",
+      position: "top",
     },
     series: [
       {
@@ -79,22 +75,15 @@ export default function Dashboard() {
           borderWidth: 2,
         },
         label: {
-          show: true, // 显示标签
-          position: "inside", // 标签显示在饼图内部
-          formatter: "{d}%", // 只显示百分比
+          show: true,
+          position: "outside", // 改为外部显示
+          formatter: "{b}: {d}%", // 显示基金名称和百分比
           fontSize: 14,
-          color: "#fff",
-          fontWeight: "bold",
+          color: "#333",
+          fontWeight: "normal",
         },
         labelLine: {
-          show: false, // 不显示标签线
-        },
-        emphasis: {
-          label: {
-            show: true,
-            fontSize: 20,
-            fontWeight: "bold",
-          },
+          show: true, // 不显示标签线
         },
         data: chartData,
       },
