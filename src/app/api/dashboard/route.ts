@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const { rows } = await sql<Fund>`
+    const { rows } = await sql.sql<Fund>`
       SELECT name, amount FROM funds WHERE user_id = ${user.userId}
     `;
 

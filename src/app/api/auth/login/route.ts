@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   try {
     const { username, password, remember } = await request.json();
 
-    const { rows } = await sql<User>`SELECT * FROM users WHERE username = ${username}`;
+    const { rows } = await sql.sql`SELECT * FROM users WHERE username = ${username}`;
     const user = rows[0];
 
     // User.password is optional in interface but required here, check for existence

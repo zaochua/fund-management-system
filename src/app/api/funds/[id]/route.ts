@@ -13,7 +13,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const { name, amount } = await request.json();
     const { id } = params;
 
-    const result = await sql`
+    const result = await sql.sql`
       UPDATE funds SET name = ${name}, amount = ${amount} WHERE id = ${id} AND user_id = ${user.userId}
     `;
 
@@ -38,7 +38,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
   try {
     const { id } = params;
 
-    const result = await sql`
+    const result = await sql.sql`
       DELETE FROM funds WHERE id = ${id} AND user_id = ${user.userId}
     `;
 

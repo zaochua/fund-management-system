@@ -10,7 +10,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: '未授权' }, { status: 401 });
     }
 
-    const { rows } = await sql<FundLog>`
+    const { rows } = await sql.sql<FundLog>`
       SELECT * FROM fund_logs WHERE user_id = ${auth.userId} ORDER BY created_at DESC
     `;
 
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
     const logDate = date || new Date().toISOString().split('T')[0]; // Format for Postgres date if needed, or pass Date object
 
-    const result = await sql`
+    const result = await sql.sql`
       INSERT INTO fund_logs (content, user_id, log_date) VALUES (${content}, ${auth.userId}, ${logDate})
       RETURNING id
     `;

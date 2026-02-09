@@ -42,7 +42,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     const id = parseInt(params.id);
     
     // Ensure the log belongs to the user
-    const result = await sql`
+    const result = await sql.sql`
       DELETE FROM fund_logs WHERE id = ${id} AND user_id = ${auth.userId}
     `;
 

@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const { rows } = await sql<Fund>`
+    const { rows } = await sql.sql<Fund>`
       SELECT * FROM funds WHERE user_id = ${user.userId} ORDER BY created_at DESC
     `;
     return NextResponse.json(rows);
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: '基金名称和金额不能为空' }, { status: 400 });
     }
 
-    const result = await sql`
+    const result = await sql.sql`
       INSERT INTO funds (name, amount, user_id) VALUES (${name}, ${amount}, ${user.userId})
       RETURNING id
     `;
