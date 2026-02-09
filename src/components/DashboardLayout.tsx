@@ -7,14 +7,16 @@ import {
   FundOutlined,
   LogoutOutlined,
   TagsOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 const { Header, Sider, Content } = Layout;
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({ children, username }: { children: React.ReactNode; username?: string }) {
   const [collapsed, setCollapsed] = useState(false);
+
   const router = useRouter();
   const pathname = usePathname();
   const {
@@ -67,7 +69,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         />
       </Sider>
       <Layout>
-        <Header style={{ padding: 0, background: colorBgContainer }} />
+        <Header style={{ padding: '0 24px', background: colorBgContainer, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+          {username && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <UserOutlined />
+              <span>{username}</span>
+            </div>
+          )}
+        </Header>
         <Content style={{ margin: '16px 16px' }}>
           <div
             style={{
