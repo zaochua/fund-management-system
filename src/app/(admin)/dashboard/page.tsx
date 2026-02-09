@@ -104,7 +104,7 @@ export default function Dashboard() {
                   title="总基金市值"
                   value={data?.totalAmount || 0}
                   precision={2}
-                  prefix="$"
+                  suffix="元"
                 />
               </Card>
             </Col>
