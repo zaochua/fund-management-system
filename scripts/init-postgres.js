@@ -1,4 +1,4 @@
-const { createPool } = require('@vercel/postgres');
+const { Client } = require('pg');
 const dotenv = require('dotenv');
 const path = require('path');
 
@@ -16,13 +16,22 @@ if (!process.env.POSTGRES_URL && !process.env.DATABASE_URL) {
 }
 
 async function initDb() {
-  const pool = createPool({
-    connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+  // Use the standard Postgres URL, not the Prisma accelerate one
+  const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+  
+  // Use pg client directly to avoid @vercel/postgres edge/websocket behavior in Node scripts
+  const client = new Client({
+    connectionString: connectionString,
+    ssl: {
+        rejectUnauthorized: false
+    }
   });
 
   try {
+    await client.connect();
+
     console.log('Creating users table...');
-    await pool.sql`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         username VARCHAR(255) NOT NULL UNIQUE,
@@ -30,10 +39,10 @@ async function initDb() {
         role VARCHAR(50) DEFAULT 'user',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-    `;
+    `);
 
     console.log('Creating funds table...');
-    await pool.sql`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS funds (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
@@ -42,19 +51,19 @@ async function initDb() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-    `;
+    `);
 
     console.log('Creating fund_names table...');
-    await pool.sql`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS fund_names (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL UNIQUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-    `;
+    `);
 
     console.log('Creating fund_logs table...');
-    await pool.sql`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS fund_logs (
         id SERIAL PRIMARY KEY,
         content TEXT NOT NULL,
@@ -62,14 +71,21 @@ async function initDb() {
         log_date DATE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-    `;
+    `);
 
     console.log('Database initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
   } finally {
-    await pool.end();
+    try {
+      await client.end();
+    } catch (e) {
+      // Ignore disconnection errors
+    }
   }
 }
 
-initDb();
+initDb().catch((err) => {
+  console.error('Unhandled error in initDb:', err);
+  process.exit(1);
+});
